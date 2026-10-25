@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eclipse City RP | Compartilhamento de Tela Exclusivo de Alto Desempenho</title>
+  <meta name="description" content="Plataforma exclusiva de transmissão e compartilhamento de tela com ultra-baixa latência, 60/120 FPS, HUDs táticos (Bodycam LSPD, Facção, Staff) e telemetria para Eclipse City RP.">
+  <meta name="theme-color" content="#ff7700">
+  
+  <!-- Favicon com a logo oficial -->
+  <link rel="icon" type="image/png" href="assets/eclipse_official_logo.png">
+
+  <!-- Google Fonts: Rajdhani, Orbitron, Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Outfit:wght@300;400;500;600;700&family=Rajdhani:wght@500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+
+  <!-- PeerJS para WebRTC P2P Ultra-Rápido sem latência de servidor intermediário -->
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="theme-eclipse">
+  <!-- Fundo Dinâmico com Backdrop de Los Santos e Brilho Solar -->
+  <div class="ambient-backdrop" id="ambientBackdrop">
+    <div class="backdrop-image"></div>
+    <div class="eclipse-solar-flare"></div>
+    <div class="carbon-grid-overlay"></div>
+  </div>
+
+  <!-- Header Superior -->
+  <header class="app-header" id="appHeader">
+    <div class="header-left">
+      <div class="brand-container" id="brandHomeBtn" role="button" tabindex="0" title="Voltar ao Início">
+        <img src="assets/eclipse_official_logo.png" alt="Eclipse City RP Logo" class="brand-logo" id="brandLogoImg">
+        <div class="brand-text">
+          <span class="brand-sub">SISTEMA EXCLUSIVO</span>
+          <span class="brand-name">STREAM & DISPATCH LINK</span>
+        </div>
+      </div>
+      <div class="server-status-badge">
+        <span class="status-dot"></span>
+        <span class="status-label">CIDADE ONLINE</span>
+        <span class="latency-pill" id="headerPingPill">-- ms</span>
+      </div>
+    </div>
+
+    <div class="header-center">
+      <div class="quick-profile-switch" id="headerProfileBar">
+        <span class="profile-label">PERFIL DE RENDERIZAÇÃO:</span>
+        <span class="profile-value" id="currentProfileName">⚡ MODO ULTRA FPS (60 FPS)</span>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <button class="icon-action-btn" id="sfxToggleBtn" title="Ativar/Desativar Efeitos Sonoros Táticos">
+        <span class="btn-icon" id="sfxIcon">🔊</span>
+        <span class="btn-tooltip">Som de Rádio</span>
+      </button>
+      <button class="icon-action-btn" id="performancePanelBtn" title="Painel de Telemetria de Alto Desempenho">
+        <span class="btn-icon">⚡</span>
+        <span class="btn-tooltip">Telemetria</span>
+      </button>
+      <div class="user-passport-chip" id="userPassportChip" title="Clique para editar seu Passaporte/ID de RP">
+        <span class="chip-icon">🪪</span>
+        <span class="chip-text">PASSAPORTE: <strong id="userPassportDisplay">#1029</strong></span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Container Principal das Views -->
+  <main class="main-content" id="mainApp">
+
+    <!-- VIEW 1: LOBBY INICIAL (Iniciar ou Assistir Transmissão) -->
+    <section class="lobby-view" id="lobbyView">
+      <div class="lobby-hero">
+        <div class="hero-badge">TECNOLOGIA WEBRTC P2P DE ULTRA-BAIXA LATÊNCIA</div>
+        <h1 class="hero-title">TRANSMISSÃO TÁTICA & TELAS <span class="text-gradient">ECLIPSE CITY</span></h1>
+        <p class="hero-subtitle">
+          Compartilhamento de tela otimizado especificamente para o GTA V / FiveM. 
+          Máximo de FPS para sua gameplay, áudio de jogo cristalino, e overlays de Bodycam Policial, Facção e Staff integrados.
+        </p>
+      </div>
+
+      <div class="cards-grid">
+        <!-- Card 1: Iniciar Transmissão (Host) -->
+        <div class="action-card host-card" id="hostCard">
+          <div class="card-glow-edge"></div>
+          <div class="card-header">
+            <div class="card-icon-wrap">
+              <span class="card-icon">📡</span>
+            </div>
+            <div>
+              <span class="card-eyebrow">TRANSMISSOR</span>
+              <h2 class="card-title">Compartilhar Minha Tela</h2>
+            </div>
+          </div>
+
+          <p class="card-description">
+            Transmita o jogo ou seu monitor em tempo real para seu copiloto, rádio de ação, central da polícia ou liderança da facção.
+          </p>
+
+          <!-- Configurações Rápidas de Desempenho -->
+          <div class="stream-config-box">
+            <div class="config-row">
+              <label for="fpsSelector" class="config-label">Taxa de Quadros (FPS):</label>
+              <select id="fpsSelector" class="custom-select">
+                <option value="60" selected>⚡ 60 FPS (Recomendado - Fluidez)</option>
+                <option value="120">🚀 120 FPS (Competitivo / Monitores 144Hz+)</option>
+                <option value="30">🔋 30 FPS (Modo Economia / PC Leve)</option>
+              </select>
+            </div>
+
+            <div class="config-row">
+              <label for="resSelector" class="config-label">Resolução Alvo:</label>
+              <select id="resSelector" class="custom-select">
+                <option value="1080" selected>Full HD (1920x1080) - Ideal</option>
+                <option value="1440">Quad HD 2K (2560x1440)</option>
+                <option value="720">HD 720p (Ultra Desempenho)</option>
+                <option value="4k">4K Ultra (Fidelidade Máxima)</option>
+              </select>
+            </div>
+
+            <div class="config-row">
+              <label for="presetSelector" class="config-label">Perfil de Codificação:</label>
+              <select id="presetSelector" class="custom-select">
+                <option value="motion" selected>🎮 Otimizado para Jogos (Motion Smoothing)</option>
+                <option value="detail">📄 Tático / Dispatch (Máxima Nitidez de Texto)</option>
+              </select>
+            </div>
+
+            <div class="toggle-row">
+              <label class="switch-container">
+                <input type="checkbox" id="audioCaptureToggle" checked>
+                <span class="switch-slider"></span>
+              </label>
+              <div class="toggle-info">
+                <span class="toggle-title">Transmitir Áudio do Jogo / Discord</span>
+                <span class="toggle-hint">Captura o som direto do GTA V com controle de ganho</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-footer">
+            <button class="primary-btn glow-amber" id="startShareBtn">
+              <span class="btn-sparkle"></span>
+              <span class="btn-text">INICIAR TRANSMISSÃO</span>
+              <span class="btn-arrow">➔</span>
+            </button>
+            <button class="secondary-btn" id="testLoopbackBtn" title="Testa a captura de tela no próprio navegador">
+              <span>🖥️ Modo Teste Local</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Card 2: Assistir Transmissão (Viewer) -->
+        <div class="action-card viewer-card" id="viewerCard">
+          <div class="card-glow-edge"></div>
+          <div class="card-header">
+            <div class="card-icon-wrap cyan-glow">
+              <span class="card-icon">👁️</span>
+            </div>
+            <div>
+              <span class="card-eyebrow">ESPECTADOR / DISPATCH</span>
+              <h2 class="card-title">Assistir Transmissão</h2>
+            </div>
+          </div>
+
+          <p class="card-description">
+            Acompanhe a tela de um membro da equipe em tempo real com áudio sincronizado e ferramentas de anotação tática.
+          </p>
+
+          <div class="room-input-box">
+            <label for="roomCodeInput" class="config-label">CÓDIGO DA SALA ECLIPSE:</label>
+            <div class="input-with-button">
+              <div class="input-prefix">ECLIPSE-</div>
+              <input 
+                type="text" 
+                id="roomCodeInput" 
+                class="room-code-field" 
+                placeholder="7789" 
+                maxlength="12"
+                autocomplete="off"
+                spellcheck="false"
+              >
+              <button class="paste-btn" id="pasteRoomCodeBtn" title="Colar da área de transferência">📋 Colar</button>
+            </div>
+            <span class="input-hint">Exemplo: Digite o código gerado pelo transmissor ou cole o link direto.</span>
+          </div>
+
+          <div class="preset-rooms-container">
+            <span class="preset-label">Salas Rápidas de Frequência:</span>
+            <div class="preset-chips">
+              <button class="chip-btn" data-room="LSPD-01">🚓 LSPD-01</button>
+              <button class="chip-btn" data-room="ROTA-ALPHA">🚨 ROTA-ALPHA</button>
+              <button class="chip-btn" data-room="SAMU-QTH">🚑 SAMU-QTH</button>
+              <button class="chip-btn" data-room="COMANDO-01">💀 COMANDO-01</button>
+            </div>
+          </div>
+
+          <div class="card-footer">
+            <button class="primary-btn glow-cyan" id="connectRoomBtn">
+              <span class="btn-text">CONECTAR À SALA</span>
+              <span class="btn-arrow">➔</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recursos Exclusivos em Destaque -->
+      <div class="features-dock">
+        <div class="feature-item">
+          <div class="feature-icon">⚡</div>
+          <div class="feature-text">
+            <strong>Zero Delay P2P</strong>
+            <span>Conexão direta WebRTC sem delay perceptível</span>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">🚓</div>
+          <div class="feature-text">
+            <strong>Bodycam AXON LSPD</strong>
+            <span>Overlay oficial com horário, GPS e viatura</span>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">✏️</div>
+          <div class="feature-text">
+            <strong>Quadro Tático (Telestrator)</strong>
+            <span>Desenho tático sobre a tela em tempo real</span>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">🛡️</div>
+          <div class="feature-text">
+            <strong>Anti-Metagaming Watermark</strong>
+            <span>Marca d'água dinâmica do espectador contra vazamentos</span>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">🪟</div>
+          <div class="feature-text">
+            <strong>Picture-in-Picture (PiP)</strong>
+            <span>Mini-janela suspensa enquanto você joga</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 2: PAINEL DO TRANSMISSOR ATIVO (Quando estiver compartilhando a tela) -->
+    <section class="host-active-panel hidden" id="hostActivePanel">
+      <div class="host-banner">
+        <div class="host-status-live">
+          <span class="rec-dot"></span>
+          <span class="rec-text">TRANSMISSÃO AO VIVO EM ANDAMENTO</span>
+        </div>
+        
+        <div class="room-share-badge">
+          <span class="share-title">SEU CÓDIGO DE TRANSMISSÃO:</span>
+          <div class="share-code-box">
+            <span class="share-code" id="hostGeneratedRoomCode">ECLIPSE-....</span>
+            <button class="copy-btn" id="copyShareLinkBtn">🔗 Copiar Link Direto</button>
+            <button class="copy-btn" id="copyCodeOnlyBtn">📋 Copiar Código</button>
+          </div>
+        </div>
+
+        <div class="host-viewers-count">
+          <span class="viewers-icon">👥</span>
+          <span class="viewers-val" id="hostConnectedViewersCount">0</span> Espectadores Conectados
+        </div>
+
+        <div class="host-actions">
+          <button class="theater-switch-btn" id="goToTheaterBtn">🖥️ Ver Transmissão no Player</button>
+          <button class="danger-btn" id="stopBroadcastingBtn">⏹ Encerrar Transmissão</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 3: THEATER / PLAYER DE TELA CHEIA (Assistindo ou Transmitindo) -->
+    <section class="theater-view hidden" id="theaterView">
+      <div class="theater-stage" id="theaterStage">
+
+        <!-- Elemento de Vídeo Principal -->
+        <video id="remoteVideo" class="stream-video" autoplay playsinline></video>
+
+        <!-- Canvas de HUD Tático (Bodycam, Faction, Staff Watermark) -->
+        <canvas id="hudOverlayCanvas" class="stage-canvas hud-canvas"></canvas>
+
+        <!-- Canvas de Telestrator (Anotações Táticas ao Vivo) -->
+        <canvas id="telestratorCanvas" class="stage-canvas telestrator-canvas pointer-events-none"></canvas>
+
+        <!-- Indicador de Carregamento / Buffering -->
+        <div class="stream-loader hidden" id="streamLoader">
+          <div class="loader-spinner"></div>
+          <div class="loader-text" id="loaderStatusText">Estabelecendo link P2P criptografado...</div>
+        </div>
+
+        <!-- Marca d'Água Dinâmica Anti-Metagaming (Move-se suavemente para impedir stream-sniping) -->
+        <div class="anti-meta-watermark hidden" id="antiMetaWatermark">
+          <span class="watermark-logo">ECLIPSE CITY RP</span>
+          <span class="watermark-user" id="watermarkUserTag">ID: #1029</span>
+          <span class="watermark-time" id="watermarkTimeTag">00:00:00</span>
+        </div>
+
+        <!-- Barra Superior Flutuante do Player (Telemetria & Status) -->
+        <div class="theater-topbar" id="theaterTopbar">
+          <div class="topbar-left">
+            <span class="live-pill"><span class="pill-dot"></span> AO VIVO</span>
+            <div class="stream-info-tag">
+              <span class="stream-title" id="stageStreamTitle">Transmissão Tática Eclipse</span>
+              <span class="stream-code-tag" id="stageRoomTag">SALA: --</span>
+            </div>
+          </div>
+
+          <div class="topbar-center">
+            <!-- Audio Visualizer Bar -->
+            <div class="audio-vu-meter" id="audioVuMeter" title="Nível de Áudio da Transmissão">
+              <div class="vu-bar" style="height: 10%"></div>
+              <div class="vu-bar" style="height: 25%"></div>
+              <div class="vu-bar" style="height: 40%"></div>
+              <div class="vu-bar" style="height: 60%"></div>
+              <div class="vu-bar" style="height: 30%"></div>
+              <div class="vu-bar" style="height: 80%"></div>
+              <div class="vu-bar" style="height: 45%"></div>
+              <div class="vu-bar" style="height: 20%"></div>
+            </div>
+          </div>
+
+          <div class="topbar-right">
+            <!-- Badges de Desempenho em Tempo Real -->
+            <div class="stat-badge" title="Taxa de Quadros por Segundo Real">
+              <span class="stat-name">FPS:</span>
+              <span class="stat-val text-green" id="statFps">60</span>
+            </div>
+            <div class="stat-badge" title="Latência de Rede P2P">
+              <span class="stat-name">PING:</span>
+              <span class="stat-val" id="statPing">8ms</span>
+            </div>
+            <div class="stat-badge" title="Resolução do Stream">
+              <span class="stat-name">RES:</span>
+              <span class="stat-val" id="statRes">1920x1080</span>
+            </div>
+            <button class="topbar-close-btn" id="exitTheaterBtn" title="Sair do Modo Player (Esc)">✕</button>
+          </div>
+        </div>
+
+        <!-- Barra de Ferramentas Táticas Inferior (Floating Toolbar) -->
+        <div class="tactical-dock" id="tacticalDock">
+          <!-- Grupo 1: Seleção de Overlays / HUDs de RP -->
+          <div class="dock-group">
+            <div class="dropdown-wrap">
+              <button class="dock-btn" id="hudMenuBtn" title="Alternar Overlays de RP (Bodycam, Facção, Staff)">
+                <span class="dock-icon">🎛️</span>
+                <span class="dock-label">HUD: <strong id="activeHudLabel">Nenhum</strong></span>
+              </button>
+              <div class="dock-dropdown-menu hidden" id="hudDropdownMenu">
+                <button class="dropdown-item active" data-hud="none">
+                  <span class="item-icon">🚫</span>
+                  <span>Limpo (Sem Overlay)</span>
+                </button>
+                <button class="dropdown-item" data-hud="bodycam">
+                  <span class="item-icon">🚓</span>
+                  <span>LSPD Bodycam Oficial (AXON)</span>
+                </button>
+                <button class="dropdown-item" data-hud="faction">
+                  <span class="item-icon">💀</span>
+                  <span>Facção / Comando Dark</span>
+                </button>
+                <button class="dropdown-item" data-hud="samu">
+                  <span class="item-icon">🚑</span>
+                  <span>SAMU / Resgate QTH</span>
+                </button>
+                <button class="dropdown-item" data-hud="staff">
+                  <span class="item-icon">🛡️</span>
+                  <span>Modo Staff Anti-Leak</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="dock-divider"></div>
+
+          <!-- Grupo 2: Quadro Tático (Telestrator / Anotação ao Vivo) -->
+          <div class="dock-group">
+            <button class="dock-btn" id="toggleDrawBtn" title="Ativar Pincel Tático para desenhar na tela">
+              <span class="dock-icon">✏️</span>
+              <span class="dock-label">Desenho Tático</span>
+            </button>
+            <div class="draw-palette hidden" id="drawPalette">
+              <button class="color-dot active" data-color="#ff7700" style="background:#ff7700" title="Laranja Solar"></button>
+              <button class="color-dot" data-color="#00e5ff" style="background:#00e5ff" title="Ciano Tático"></button>
+              <button class="color-dot" data-color="#ff2255" style="background:#ff2255" title="Alvo / Inimigo"></button>
+              <button class="color-dot" data-color="#00ff66" style="background:#00ff66" title="Zona Segura"></button>
+              <button class="tool-btn-mini" id="clearDrawBtn" title="Limpar Anotações">🗑️ Limpar</button>
+            </div>
+          </div>
+
+          <div class="dock-divider"></div>
+
+          <!-- Grupo 3: Áudio Booster & Controles -->
+          <div class="dock-group">
+            <button class="dock-btn" id="audioToggleBtn" title="Mutar / Desmutar Áudio">
+              <span class="dock-icon" id="audioToggleIcon">🔊</span>
+              <span class="dock-label" id="audioVolumeLabel">100%</span>
+            </button>
+            <div class="volume-slider-popup hidden" id="volumeSliderPopup">
+              <span class="volume-hint">Amplificador de Áudio (+200%):</span>
+              <input type="range" id="volumeSlider" min="0" max="2" step="0.05" value="1">
+            </div>
+          </div>
+
+          <div class="dock-divider"></div>
+
+          <!-- Grupo 4: Ferramentas Especiais (PiP, Screenshot, Tela Cheia) -->
+          <div class="dock-group">
+            <button class="dock-btn" id="pipBtn" title="Picture-in-Picture: Mini janela flutuante para jogar enquanto assiste">
+              <span class="dock-icon">🪟</span>
+              <span class="dock-label">PiP</span>
+            </button>
+            <button class="dock-btn" id="screenshotBtn" title="Capturar Screenshot em Alta Resolução">
+              <span class="dock-icon">📸</span>
+              <span class="dock-label">Print HD</span>
+            </button>
+            <button class="dock-btn" id="fullscreenBtn" title="Alternar Tela Cheia (F)">
+              <span class="dock-icon" id="fullscreenIcon">⛶</span>
+              <span class="dock-label">Tela Cheia</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL: Telemetria de Alto Desempenho -->
+  <div class="modal-backdrop hidden" id="performanceModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-icon">⚡</span>
+          <h3>TELEMETRIA DE ALTO DESEMPENHO (ECLIPSE ENGINE)</h3>
+        </div>
+        <button class="modal-close-btn" id="closePerformanceModalBtn">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="telemetry-grid">
+          <div class="telemetry-card">
+            <span class="tel-label">Taxa de Quadros (Render)</span>
+            <span class="tel-val" id="modalFpsVal">60.0 FPS</span>
+            <span class="tel-sub">Sem queda de frames no GTA V</span>
+          </div>
+          <div class="telemetry-card">
+            <span class="tel-label">Latência P2P Estimada</span>
+            <span class="tel-val text-green" id="modalPingVal">6 ~ 12 ms</span>
+            <span class="tel-sub">STUN Direto / Google WebRTC</span>
+          </div>
+          <div class="telemetry-card">
+            <span class="tel-label">Bitrate de Transmissão</span>
+            <span class="tel-val" id="modalBitrateVal">8.5 Mbps</span>
+            <span class="tel-sub">Codec H.264 / VP9 Hardware</span>
+          </div>
+          <div class="telemetry-card">
+            <span class="tel-label">Resolução Ativa</span>
+            <span class="tel-val" id="modalResVal">1920x1080p</span>
+            <span class="tel-sub">Proporção 16:9 Estável</span>
+          </div>
+        </div>
+
+        <div class="perf-tips">
+          <h4>💡 DICAS PARA MÁXIMA PERFORMANCE NO FIVE-M:</h4>
+          <ul>
+            <li>Ao compartilhar no Discord ou navegador, selecione <strong>"Tela Inteira"</strong> ou a <strong>janela específica do GTA V</strong>.</li>
+            <li>Mantenha a aceleração de hardware ativada nas configurações do seu navegador para zero sobrecarga na CPU.</li>
+            <li>O áudio do jogo é enviado através do protocolo WebRTC Opus em estéreo com 48kHz de alta fidelidade.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="primary-btn glow-amber" id="closeModalActionBtn">Entendido</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Editar Passaporte / Ficha do Jogador -->
+  <div class="modal-backdrop hidden" id="passportModal">
+    <div class="modal-box small-modal">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-icon">🪪</span>
+          <h3>IDENTIDADE ECLIPSE CITY RP</h3>
+        </div>
+        <button class="modal-close-btn" id="closePassportModalBtn">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="passportIdInput" class="config-label">Seu Passaporte / ID na Cidade:</label>
+          <input type="text" id="passportIdInput" class="custom-input" placeholder="Ex: 1029" maxlength="8">
+        </div>
+        <div class="form-group">
+          <label for="officerNameInput" class="config-label">Nome de RP / Oficial:</label>
+          <input type="text" id="officerNameInput" class="custom-input" placeholder="Ex: Cadu Henrique" maxlength="24">
+        </div>
+        <div class="form-group">
+          <label for="officerUnitInput" class="config-label">Viatura / Unidade / Tag:</label>
+          <input type="text" id="officerUnitInput" class="custom-input" placeholder="Ex: TÁTICO-01 ou COMANDO" maxlength="20">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="primary-btn glow-amber" id="savePassportBtn">Salvar Identidade</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notificações Flutuantes (Toast) -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Scripts do Sistema -->
+  <script src="js/audio.js"></script>
+  <script src="js/telestrator.js"></script>
+  <script src="js/webrtc.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
